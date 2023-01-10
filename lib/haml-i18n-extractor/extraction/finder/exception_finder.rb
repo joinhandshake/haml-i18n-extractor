@@ -16,6 +16,8 @@ module Haml
         QUOTED_STRINGS = /((?<![\\]|t\(|class:[\s*])['"])((?:.(?!(?<![\\])\1))*.?)\1/
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
 
+        RENDER_PARTIAL_MATCH = /render[\s*](layout:[\s*])?['"](.*?)['"].*$/
+
         # this class simply returns text except for anything that matches these regexes.
         # returns first match.
         EXCEPTION_MATCHES = [ LINK_TO_BLOCK_FORM_DOUBLE_Q, LINK_TO_BLOCK_FORM_SINGLE_Q,
@@ -47,6 +49,8 @@ module Haml
           elsif @text.match(QUOTED_STRINGS)
             ret = @text.scan(QUOTED_STRINGS).flatten
             ret = filter_out_invalid_quoted_strings(ret)
+            ret = filter_out_non_words(ret)
+            ret = filter_out_partial_renders(ret, @text)
             ret = ret.length > 1 ? ret : ret[0]
           else
             EXCEPTION_MATCHES.each do |regex|
@@ -62,9 +66,38 @@ module Haml
         # Remove any matches that are just quote marks
         # e.g. "Blah" would get kept but "'" and "t(blah)" would be discarded
         def filter_out_invalid_quoted_strings(arr)
-          arr.select { |str| str != "'" && str != '"' && !str.start_with?(',')}
+          arr.select { |str| str != "'" && str != '"' && !str.start_with?(',') }
         end
 
+        # Remove any matches that are not words for translating, but are instead UI elements
+        def filter_out_non_words(arr)
+          arr.select do |str|
+            str != "•" &&
+              str != 'x' &&
+              str != '×' &&
+              str != '*' &&
+              str != '-' &&
+              str != "&times;"
+          end
+        end
+
+        def filter_out_partial_renders(arr, full_text)
+          return arr unless full_text.include?('= render')
+
+          # match a render call with optional layout: parameter allowed to figure out
+          # the string equaling the partial being rendered in the full_text
+          full_text.match(RENDER_PARTIAL_MATCH)
+          partial_name = $2
+
+          arr.select do |str|
+            str != partial_name &&
+              # Anything with these characters in them we assume is not a string
+              # we want to translate, but rather a programmatic string
+              !str.include?('-') &&
+              !str.include?('_') &&
+              !str.include?('/')
+          end
+        end
       end
     end
   end

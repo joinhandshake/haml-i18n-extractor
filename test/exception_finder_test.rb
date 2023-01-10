@@ -22,9 +22,17 @@ module Haml
       %{f.submit "Close This Month (cannot be undone)", :class => 'btn btn-primary'} => ["Close This Month (cannot be undone)", "btn btn-primary"]
     }
 
+    UI_ELEMENT_STRINGS = [%{"*"}, %{'x'}, %{"•"}]
+
     def test_it_finds_text_pretty_simply
       MATCHES.each do |input, expected_result|
         assert_equal expected_result, find(input)
+      end
+    end
+
+    def test_it_does_not_find_ui_element_strings
+      UI_ELEMENT_STRINGS.each do |input|
+        assert_nil find(input)
       end
     end
 
@@ -37,6 +45,24 @@ module Haml
       input = "= f.input :blah, label: 'BLAH', hint: 'BLABBLOO'"
       find_results = find(input)
       assert_equal(['BLAH', 'BLABBLOO'], find_results)
+    end
+
+    def test_it_does_not_find_render_partial_strings
+      input = "= render 'partial_name'"
+      find_results = find(input)
+      assert_nil find_results
+    end
+
+    def test_it_does_not_find_render_partial_strings_two
+      input = '= render layout: "partial_name"'
+      find_results = find(input)
+      assert_nil find_results
+    end
+
+    def test_it_handles_complex_render_calls
+      input = "= render 'empty_state', text: \"BLAH'S TEXT.\", description: 'FOO BAR', result_partial: 'contacts/results'"
+      find_results = find(input)
+      assert_equal(["BLAH'S TEXT.", "FOO BAR"], find_results)
     end
 
     private
