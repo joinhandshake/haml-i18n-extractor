@@ -47,6 +47,8 @@ module Haml
           elsif @text.match(QUOTED_STRINGS)
             ret = @text.scan(QUOTED_STRINGS).flatten
             ret = filter_out_invalid_quoted_strings(ret)
+            ret = filter_out_non_words(ret)
+            ret = filter_out_partial_renders(ret, @text)
             ret = ret.length > 1 ? ret : ret[0]
           else
             EXCEPTION_MATCHES.each do |regex|
@@ -62,9 +64,30 @@ module Haml
         # Remove any matches that are just quote marks
         # e.g. "Blah" would get kept but "'" and "t(blah)" would be discarded
         def filter_out_invalid_quoted_strings(arr)
-          arr.select { |str| str != "'" && str != '"' && !str.start_with?(',')}
+          arr.select { |str| str != "'" && str != '"' && !str.start_with?(',') }
         end
 
+        # Remove any matches that are not words for translating, but are instead UI elements
+        def filter_out_non_words(arr)
+          arr.select do |str|
+            str != "•" &&
+              str != 'x' &&
+              str != '×' &&
+              str != '*' &&
+              str != '-' &&
+              str != "&times;"
+          end
+        end
+
+        def filter_out_partial_renders(arr, full_text)
+          return arr unless full_text.include?('= render')
+
+          # match a render call with optional layout: parameter allowed
+          full_text.match(/render[\s*](layout:[\s*])?['"](.+)['"]/)
+          partial_name = $2
+
+          arr.select { |str| str != partial_name }
+        end
       end
     end
   end
