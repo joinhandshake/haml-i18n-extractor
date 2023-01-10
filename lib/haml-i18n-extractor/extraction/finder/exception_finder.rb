@@ -16,6 +16,8 @@ module Haml
         QUOTED_STRINGS = /((?<![\\]|t\(|class:[\s*])['"])((?:.(?!(?<![\\])\1))*.?)\1/
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
 
+        RENDER_PARTIAL_MATCH = /render[\s*](layout:[\s*])?['"](.*?)['"].*$/
+
         # this class simply returns text except for anything that matches these regexes.
         # returns first match.
         EXCEPTION_MATCHES = [ LINK_TO_BLOCK_FORM_DOUBLE_Q, LINK_TO_BLOCK_FORM_SINGLE_Q,
@@ -83,7 +85,7 @@ module Haml
           return arr unless full_text.include?('= render')
 
           # match a render call with optional layout: parameter allowed
-          full_text.match(/render[\s*](layout:[\s*])?['"](.+)['"]/)
+          full_text.match(RENDER_PARTIAL_MATCH)
           partial_name = $2
 
           arr.select { |str| str != partial_name }

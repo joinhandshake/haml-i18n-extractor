@@ -32,7 +32,7 @@ module Haml
 
     def test_it_does_not_find_ui_element_strings
       UI_ELEMENT_STRINGS.each do |input|
-        assert_equal nil, find(input)
+        assert_nil find(input)
       end
     end
 
@@ -50,13 +50,19 @@ module Haml
     def test_it_does_not_find_render_partial_strings
       input = "= render 'partial_name'"
       find_results = find(input)
-      assert_equal(nil, find_results)
+      assert_nil find_results
     end
 
     def test_it_does_not_find_render_partial_strings_two
       input = '= render layout: "partial_name"'
       find_results = find(input)
-      assert_equal(nil, find_results)
+      assert_nil find_results
+    end
+
+    def test_it_handles_complex_render_calls
+      input = "= render 'empty_state', text: \"BLAH'S TEXT.\", description: 'FOO BAR'"
+      find_results = find(input)
+      assert_equal(["BLAH'S TEXT.", "FOO BAR"], find_results)
     end
 
     private
