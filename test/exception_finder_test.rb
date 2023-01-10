@@ -60,7 +60,7 @@ module Haml
     end
 
     def test_it_handles_complex_render_calls
-      input = "= render 'empty_state', text: \"BLAH'S TEXT.\", description: 'FOO BAR'"
+      input = "= render 'empty_state', text: \"BLAH'S TEXT.\", description: 'FOO BAR', result_partial: 'contacts/results'"
       find_results = find(input)
       assert_equal(["BLAH'S TEXT.", "FOO BAR"], find_results)
     end

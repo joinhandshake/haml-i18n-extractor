@@ -84,11 +84,19 @@ module Haml
         def filter_out_partial_renders(arr, full_text)
           return arr unless full_text.include?('= render')
 
-          # match a render call with optional layout: parameter allowed
+          # match a render call with optional layout: parameter allowed to figure out
+          # the string equaling the partial being rendered in the full_text
           full_text.match(RENDER_PARTIAL_MATCH)
           partial_name = $2
 
-          arr.select { |str| str != partial_name }
+          arr.select do |str|
+            str != partial_name &&
+              # Anything with these characters in them we assume is not a string
+              # we want to translate, but rather a programmatic string
+              !str.include?('-') &&
+              !str.include?('_') &&
+              !str.include?('/')
+          end
         end
       end
     end
