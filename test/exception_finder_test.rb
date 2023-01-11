@@ -65,6 +65,30 @@ module Haml
       assert_equal(["BLAH'S TEXT.", "FOO BAR"], find_results)
     end
 
+    def test_it_does_not_find_component_strings
+      input = "= react_component 'MyReactComponent'"
+      find_results = find(input)
+      assert_nil find_results
+    end
+
+    def test_it_does_not_find_component_strings_two
+      input = "= knockout_component('MyReactComponent') do"
+      find_results = find(input)
+      assert_nil find_results
+    end
+
+    def test_it_handles_complex_component_renders
+      input = "= knockout_component 'ManageContactsView', text: \"BLAH'S TEXT.\", description: 'FOO BAR', result_partial: 'contacts/results'"
+      find_results = find(input)
+      assert_equal(["BLAH'S TEXT.", "FOO BAR"], find_results)
+    end
+
+    def test_it_handles_simple_form_for
+      input = "= simple_nested_form_for @record, :html => { \"data-bind\" => \"disableOnSubmit: true\" }, :defaults => { input_html: { class: 'form-control' }}  do |f|"
+      find_results = find(input)
+      assert_nil find_results
+    end
+
     private
 
     def find(txt)

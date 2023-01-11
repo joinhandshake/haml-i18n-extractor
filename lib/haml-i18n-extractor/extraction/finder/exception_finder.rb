@@ -17,6 +17,8 @@ module Haml
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
 
         RENDER_PARTIAL_MATCH = /render[\s*](layout:[\s*])?['"](.*?)['"].*$/
+        COMPONENT_MATCH = /(knockout_component|react_component)\s*\(?['"](.*?)['"]\)?.*$/
+        SIMPLE_FORM_FOR = /simple_nested_form_for(.*)/
 
         # this class simply returns text except for anything that matches these regexes.
         # returns first match.
@@ -46,11 +48,14 @@ module Haml
           ret = @text
           if @text.match(ARRAY_OF_STRINGS)
             ret = $1.gsub(/['"]/,'').split(', ')
-          elsif @text.match(QUOTED_STRINGS)
+          elsif @text.match(SIMPLE_FORM_FOR)
+            ret = nil
+          elsif @text.match(QUOTED_STRINGS) || @text.match(RENDER_PARTIAL_MATCH) || @text.match(COMPONENT_MATCH)
             ret = @text.scan(QUOTED_STRINGS).flatten
             ret = filter_out_invalid_quoted_strings(ret)
             ret = filter_out_non_words(ret)
             ret = filter_out_partial_renders(ret, @text)
+            ret = filter_out_component_methods(ret, @text)
             ret = ret.length > 1 ? ret : ret[0]
           else
             EXCEPTION_MATCHES.each do |regex|
@@ -91,6 +96,24 @@ module Haml
 
           arr.select do |str|
             str != partial_name &&
+              # Anything with these characters in them we assume is not a string
+              # we want to translate, but rather a programmatic string
+              !str.include?('-') &&
+              !str.include?('_') &&
+              !str.include?('/')
+          end
+        end
+
+        def filter_out_component_methods(arr, full_text)
+          # match a render call with optional layout: parameter allowed to figure out
+          # the string equaling the partial being rendered in the full_text
+          full_text.match(COMPONENT_MATCH)
+          component_name = $2
+
+          return arr unless component_name.present?
+
+          arr.select do |str|
+            str != component_name &&
               # Anything with these characters in them we assume is not a string
               # we want to translate, but rather a programmatic string
               !str.include?('-') &&
