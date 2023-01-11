@@ -110,7 +110,7 @@ module Haml
           full_text.match(COMPONENT_MATCH)
           component_name = $2
 
-          return arr unless component_name.present?
+          return arr unless component_name != nil
 
           arr.select do |str|
             str != component_name &&
