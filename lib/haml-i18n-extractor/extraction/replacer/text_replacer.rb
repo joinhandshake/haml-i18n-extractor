@@ -63,7 +63,7 @@ module Haml
           end
         end
 
-        T_REGEX = /t\('\.(.*?)'\)/
+        T_REGEX = /t\(['"]\.(.*?)['"]\)/
 
         # the_key_to_use ( for example in t('.the_key_to_use')
         def t_name(to_replace = @text_to_replace, orig_line = @orig_line)

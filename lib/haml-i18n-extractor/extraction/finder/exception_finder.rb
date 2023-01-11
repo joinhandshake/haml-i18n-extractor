@@ -13,7 +13,8 @@ module Haml
         FORM_SUBMIT_BUTTON_DOUBLE_Q = /[a-z]\.submit\s?["](.*?)["].*$/
         # get quoted strings that are not preceded by t( - not translated
         # based on https://www.metaltoad.com/blog/regex-quoted-string-escapable-quotes
-        QUOTED_STRINGS = /((?<![\\]|t\(|class:[\s*])['"])((?:.(?!(?<![\\])\1))*.?)\1/
+        # QUOTED_STRINGS = /((?<![\\]|t\(|class:[\s*])['"])((?:.(?!(?<![\\])\1))*.?)\1/
+        QUOTED_STRINGS = /((?<![\\])['"])((?:.(?!(?<![\\])\1))*.?)\1/
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
 
         RENDER_PARTIAL_MATCH = /render[\s*](layout:[\s*])?['"](.*?)['"].*$/
@@ -48,7 +49,7 @@ module Haml
           ret = @text
           if @text.match(ARRAY_OF_STRINGS)
             ret = $1.gsub(/['"]/,'').split(', ')
-          elsif @text.match(SIMPLE_FORM_FOR)
+          elsif @text.match(SIMPLE_FORM_FOR) || @text == 'data-bind'
             ret = nil
           elsif @text.match(QUOTED_STRINGS) || @text.match(RENDER_PARTIAL_MATCH) || @text.match(COMPONENT_MATCH)
             ret = @text.scan(QUOTED_STRINGS).flatten
@@ -82,17 +83,22 @@ module Haml
               str != '×' &&
               str != '*' &&
               str != '-' &&
-              str != "&times;"
+              str != "&times;" &&
+              # If a string is entirely downcase/upcase, it probably is not a string that should be
+              # translated and is instead a programmatic type string
+              str.downcase != str &&
+              str.upcase != str
           end
         end
 
         def filter_out_partial_renders(arr, full_text)
-          return arr unless full_text.include?('= render')
-
           # match a render call with optional layout: parameter allowed to figure out
           # the string equaling the partial being rendered in the full_text
           full_text.match(RENDER_PARTIAL_MATCH)
           partial_name = $2
+
+          return arr unless partial_name != nil
+          puts partial_name
 
           arr.select do |str|
             str != partial_name &&
@@ -111,6 +117,7 @@ module Haml
           component_name = $2
 
           return arr unless component_name != nil
+          puts component_name
 
           arr.select do |str|
             str != component_name &&

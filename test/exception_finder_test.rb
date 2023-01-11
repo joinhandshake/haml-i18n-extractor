@@ -48,7 +48,7 @@ module Haml
     end
 
     def test_it_does_not_find_render_partial_strings
-      input = "= render 'partial_name'"
+      input = "    = render 'sidebar'"
       find_results = find(input)
       assert_nil find_results
     end
