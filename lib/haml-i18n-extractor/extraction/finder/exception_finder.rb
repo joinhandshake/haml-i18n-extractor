@@ -83,6 +83,12 @@ module Haml
               str != '×' &&
               str != '*' &&
               str != '-' &&
+              str != '(' &&
+              str != ')' &&
+              str != '{' &&
+              str != '}' &&
+              str != '[' &&
+              str != ']' &&
               str != "&times;" &&
               # If a string is entirely downcase/upcase, it probably is not a string that should be
               # translated and is instead a programmatic type string
