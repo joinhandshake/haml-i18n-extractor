@@ -60,13 +60,22 @@ module Haml
           else
             existing_yaml_hash = {}
           end
-          final_yaml_hash = existing_yaml_hash.deep_merge!(yaml_hash)
+          final_yaml_hash = sort_yaml_hash(existing_yaml_hash.deep_merge!(yaml_hash))
           f = File.open(pth, "w+")
           f.puts final_yaml_hash.to_yaml(:line_width => 400)
           f.flush
         end
 
         private
+
+        def sort_yaml_hash(yaml_hash)
+          return yaml_hash unless yaml_hash.is_a?(Hash)
+
+          rv = Hash.new
+          yaml_hash.each { |k, v| rv[k] = sort_yaml_hash(v) }
+          sorted = rv.sort { |a, b| a[0].to_s <=> b[0].to_s }
+          rv.class[sorted]
+        end
 
         # {:foo => {:bar => {:baz => :mam}, :barrr => {:bazzz => :mammm} }}
         def hashify(my_hash)
