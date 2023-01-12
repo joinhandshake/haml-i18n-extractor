@@ -148,6 +148,7 @@ module Haml
         line_no = 1
         replacements = {}
         @haml_reader.lines.each do |orig_line|
+          puts "haml reader lines each: #{orig_line}"
           orig_line, whitespace = handle_line_whitespace(orig_line.chomp)
           finder_result = finding_result(orig_line, line_no)
           is_array_match = finder_result.match.is_a?(Array)

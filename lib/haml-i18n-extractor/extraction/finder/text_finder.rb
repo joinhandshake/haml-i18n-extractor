@@ -15,6 +15,10 @@ module Haml
         end
 
         def process_by_regex
+          puts "process_by_regex: #{@orig_line}"
+          puts "process_by_regex:"
+          puts @metadata
+          puts @metadata[:type]
           # [ line_type, text_found ]
           #output_debug if Haml::I18n::Extractor.debug?
           result = @metadata && send("#{@metadata[:type]}", @metadata)
@@ -63,7 +67,7 @@ module Haml
         end
 
         def tag(line)
-          # puts "tag: #{line}"
+          puts "tag: #{line}"
           title_value = extract_attribute(line, :title)
           if string_value?(title_value)
             FinderResult.new(:tag, title_value[1...-1].gsub(/['"]*/, ''), :place => :attribute, :attribute_name => :title)

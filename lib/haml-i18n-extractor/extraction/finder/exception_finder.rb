@@ -14,7 +14,6 @@ module Haml
         # get quoted strings that are not preceded by t( - not translated
         # based on https://www.metaltoad.com/blog/regex-quoted-string-escapable-quotes
         QUOTED_STRINGS = /((?<![\\]|t\()['"])((?:.(?!(?<![\\])\1))*.?)\1/
-        # QUOTED_STRINGS = /((?<![\\])['"])((?:.(?!(?<![\\])\1))*.?)\1/
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
 
         RENDER_PARTIAL_MATCH = /render[\s*](layout:[\s*])?['"](.*?)['"].*$/
@@ -33,6 +32,7 @@ module Haml
         end
 
         def self.could_match?(txt)
+          puts "could match? #{txt}"
           # want to match:
           # = 'foo'
           # = "foo"

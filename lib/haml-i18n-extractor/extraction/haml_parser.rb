@@ -15,7 +15,7 @@ module Haml
           # make the haml we passed in a parse tree!
           @ht_parse_tree = self.call(haml)
           ret = flatten_tree_attrs(@ht_parse_tree,[])
-          ret[1..-2] # we only want the actual lines, not the root node and last line which don't really exist
+          ret[1..-1] # we only want the actual lines, not the root node and last line which don't really exist
           #ret
         end
         alias_method :metadata, :flattened_values
