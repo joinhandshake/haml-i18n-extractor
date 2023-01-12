@@ -94,6 +94,9 @@ module Haml
               str != '[' &&
               str != ']' &&
               str != '&times;' &&
+              # Skip any strings which are time / date formatting strings such as %Y or %B.
+              # Match '%' followed by 1 alpha-numeric character
+              !str.match(/\%\w/) &&
               # This is a js function call - should be ignored
               !str.include?('()') &&
               # If a string is entirely downcase/upcase, it probably is not a string that should be
