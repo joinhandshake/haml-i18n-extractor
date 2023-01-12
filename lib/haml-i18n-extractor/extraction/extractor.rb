@@ -148,7 +148,6 @@ module Haml
         line_no = 1
         replacements = {}
         @haml_reader.lines.each do |orig_line|
-          puts "haml reader lines each: #{orig_line}"
           orig_line, whitespace = handle_line_whitespace(orig_line.chomp)
           finder_result = finding_result(orig_line, line_no)
           is_array_match = finder_result.match.is_a?(Array)
@@ -157,8 +156,6 @@ module Haml
           replacement_info = []
           finder_result_matches.each_with_index do |match, index|
             replacer_result = replacement_result(orig_line, match, finder_result.type, line_no, finder_result.options)
-            puts "replacer_results: #{match}"
-            puts replacer_result.should_be_replaced
             if replacer_result.should_be_replaced
               replacement_info.push(replacer_result.info)
               replacements[line_no] = ["#{whitespace}#{replacer_result.modified_line}", replacement_info]
@@ -167,7 +164,6 @@ module Haml
           end
           line_no += 1
         end
-        puts replacements
         replacements
       end
 
@@ -179,7 +175,6 @@ module Haml
 
       def replacement_result(orig_line, line_match, line_type, line_no, options)
         if line_match && !line_match.empty?
-          puts 'rr: a'
           result = Haml::I18n::Extractor::TextReplacer.new(orig_line, line_match, line_type, @haml_reader.path, line_metadata(line_no), {
             :add_filename_prefix => @add_filename_prefix,
             :base_path => @base_path
@@ -187,7 +182,6 @@ module Haml
 
           result
         else
-          puts 'rr: b'
           Haml::I18n::Extractor::ReplacerResult.new(orig_line, nil, line_match, false, "")
         end
       end

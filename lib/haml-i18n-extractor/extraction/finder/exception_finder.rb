@@ -32,7 +32,6 @@ module Haml
         end
 
         def self.could_match?(txt)
-          puts "could match? #{txt}"
           # want to match:
           # = 'foo'
           # = "foo"
@@ -54,7 +53,6 @@ module Haml
           elsif @text.match(QUOTED_STRINGS) || @text.match(RENDER_PARTIAL_MATCH) || @text.match(COMPONENT_MATCH)
             ret = @text.scan(QUOTED_STRINGS).flatten
             ret = filter_out_invalid_quoted_strings(ret)
-            ret = filter_out_non_words(ret)
             ret = filter_out_partial_renders(ret, @text)
             ret = filter_out_component_methods(ret, @text)
             ret = ret.length > 1 ? ret : ret[0]
@@ -66,6 +64,9 @@ module Haml
               end
             end
           end
+
+          ret = filter_out_non_words(ret)
+
           ret
         end
 
@@ -77,7 +78,10 @@ module Haml
 
         # Remove any matches that are not words for translating, but are instead UI elements
         def filter_out_non_words(arr)
-          arr.select do |str|
+          return nil if arr.nil?
+
+          arr = arr.is_a?(Array) ? arr : [arr]
+          arr.compact.select do |str|
             str != "•" &&
               str != 'x' &&
               str != '×' &&
@@ -89,7 +93,7 @@ module Haml
               str != '}' &&
               str != '[' &&
               str != ']' &&
-              str != "&times;" &&
+              str != '&times;' &&
               # This is a js function call - should be ignored
               !str.include?('()') &&
               # If a string is entirely downcase/upcase, it probably is not a string that should be
@@ -110,7 +114,6 @@ module Haml
           partial_name = $2
 
           return arr unless partial_name != nil
-          puts partial_name
 
           arr.select do |str|
             str != partial_name &&
@@ -129,7 +132,6 @@ module Haml
           component_name = $2
 
           return arr unless component_name != nil
-          puts component_name
 
           arr.select do |str|
             str != component_name &&

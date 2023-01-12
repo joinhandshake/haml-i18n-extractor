@@ -15,10 +15,6 @@ module Haml
         end
 
         def process_by_regex
-          puts "process_by_regex: #{@orig_line}"
-          puts "process_by_regex:"
-          puts @metadata
-          puts @metadata[:type]
           # [ line_type, text_found ]
           #output_debug if Haml::I18n::Extractor.debug?
           result = @metadata && send("#{@metadata[:type]}", @metadata)
@@ -60,14 +56,12 @@ module Haml
         end
 
         def plain(line)
-          # puts line
           txt = line[:value][:text]
           return nil if html_comment?(txt)
           FinderResult.new(:plain, txt)
         end
 
         def tag(line)
-          puts "tag: #{line}"
           title_value = extract_attribute(line, :title)
           if string_value?(title_value)
             FinderResult.new(:tag, title_value[1...-1].gsub(/['"]*/, ''), :place => :attribute, :attribute_name => :title)
@@ -87,15 +81,9 @@ module Haml
         end
 
         def script(line)
-          if true # line[:value][:text].include?('render')
-            puts "script: #{line}"
-            match = ExceptionFinder.new(line[:value][:text]).find
-            puts "script match: #{match}"
-          end
           txt = line[:value][:text]
           if ExceptionFinder.could_match?(txt)
             match = ExceptionFinder.new(txt).find
-            puts "94: #{match}"
             if (match.is_a?(Array))
               FinderResult.new(:script_array, match)
             else
