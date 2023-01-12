@@ -42,7 +42,7 @@ module Haml
 
         # the new full line, including a `t()` replacement instead of the `text_to_replace` portion.
         def modified_line
-          return @full_line if has_been_translated?(@full_line) && !@options[:add_filename_prefix]
+          return @full_line if has_been_translated?(@text_to_replace) && !@options[:add_filename_prefix]
           full_line = @full_line.dup
           keyname = orig_interpolated? ? interpolation_helper.keyname_with_vars : t_method
           @text_to_replace = remove_quotes_from_interpolated_text(@text_to_replace)

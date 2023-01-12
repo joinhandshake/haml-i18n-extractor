@@ -13,8 +13,8 @@ module Haml
         FORM_SUBMIT_BUTTON_DOUBLE_Q = /[a-z]\.submit\s?["](.*?)["].*$/
         # get quoted strings that are not preceded by t( - not translated
         # based on https://www.metaltoad.com/blog/regex-quoted-string-escapable-quotes
-        # QUOTED_STRINGS = /((?<![\\]|t\(|class:[\s*])['"])((?:.(?!(?<![\\])\1))*.?)\1/
-        QUOTED_STRINGS = /((?<![\\])['"])((?:.(?!(?<![\\])\1))*.?)\1/
+        QUOTED_STRINGS = /((?<![\\]|t\()['"])((?:.(?!(?<![\\])\1))*.?)\1/
+        # QUOTED_STRINGS = /((?<![\\])['"])((?:.(?!(?<![\\])\1))*.?)\1/
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
 
         RENDER_PARTIAL_MATCH = /render[\s*](layout:[\s*])?['"](.*?)['"].*$/
@@ -90,10 +90,16 @@ module Haml
               str != '[' &&
               str != ']' &&
               str != "&times;" &&
+              # This is a js function call - should be ignored
+              !str.include?('()') &&
               # If a string is entirely downcase/upcase, it probably is not a string that should be
               # translated and is instead a programmatic type string
               str.downcase != str &&
-              str.upcase != str
+              str.upcase != str &&
+              # Try and exclude data-bind values as well as possible
+              !str.include?("$data") &&
+              !str.include?("$parent") &&
+              !str.match(/[a-z]: /)
           end
         end
 
