@@ -5,8 +5,8 @@ module Haml
         include Helpers::StringHelpers
 
         TAG_REGEX = /%\w+/
-        TAG_CLASSES_AND_ID_REGEX = /(?:[.#]\w+)*/
-        TAG_ATTRIBUTES_REGEX = /(?:\{[^}]+\})?/
+        TAG_CLASSES_AND_ID_REGEX = /(?:[.#][\w\-\_]+)*/
+        TAG_ATTRIBUTES_REGEX = /\(.+\)|(?:\{[^}]+\})?/
 
         attr_reader :full_line, :text_to_replace, :line_type
 
