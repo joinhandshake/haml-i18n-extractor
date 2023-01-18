@@ -104,10 +104,12 @@ module Haml
               scanner.skip(TAG_REGEX)
               scanner.skip(TAG_CLASSES_AND_ID_REGEX)
               scanner.skip(TAG_ATTRIBUTES_REGEX)
-              if scanner.scan_until(/[\s]*#{Regexp.escape(keyname)}/)
-                unless already_evaled?(scanner.pre_match)
-                  str[0..-1] = "#{scanner.pre_match}=#{scanner.matched}#{scanner.post_match}"
-                end
+              if scanner.scan_until(/[\s]*#{Regexp.escape(keyname)}/) && !already_evaled?(scanner.pre_match)
+                str[0..-1] = "#{scanner.pre_match}=#{scanner.matched}#{scanner.post_match}"
+              elsif @options[:place] == :attribute
+                # We specifically are adding interpolation to HTML style attributes. Without this, it is invalid
+                # syntax.
+                str.gsub!("#{@options[:attribute_name]}=#{keyname}", "#{@options[:attribute_name]}=\"#\{#{keyname}}\"")
               end
             elsif @line_type == :plain || (@line_type == :script && !already_evaled?(full_line))
               str.gsub!(str, "= "+str)
@@ -163,13 +165,14 @@ module Haml
             elsif @options[:place] == :attribute
               scanner.skip(TAG_REGEX)
               scanner.skip(TAG_CLASSES_AND_ID_REGEX)
-              scanner.skip_until(/\b#{@options[:attribute_name]}:|:#{@options[:attribute_name]}\s*=>\s*/)
+              # Skip until 'attribute:' or 'attribute=' or ':attribute => '. The middle one is HTML style
+              # attributes, the other two are HAML style attributes
+              scanner.skip_until(/\b#{@options[:attribute_name]}:|\b#{@options[:attribute_name]}=|:#{@options[:attribute_name]}\s*=>\s*/)
             end
           end
           scanner.scan_until(/(['"]|)#{Regexp.escape(text_to_replace)}\1/)
           str << scanner.pre_match.to_s << keyname_method << scanner.post_match.to_s
         end
-
       end
     end
   end

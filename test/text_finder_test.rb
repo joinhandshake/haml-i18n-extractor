@@ -120,6 +120,16 @@ module Haml
                    {:place => :attribute, :attribute_name => :title}
     end
 
+    def test_html_tag_it_finds_alt_attribute_value
+      assert_equal find_text('%p{:alt => "Text to find", :class => css_cls}=ruby_eval_code'), "Text to find"
+      assert_equal find_text('%p{:alt => "Text to find"}=ruby_eval_code'), "Text to find"
+      assert_equal find_text('%p{alt: "Text to find"}=ruby_eval_code'), "Text to find"
+      assert_equal find_text('%p{alt: "Text to find"} Another text'), "Text to find"
+      assert_equal find_type('%p{:alt => "Text to find"}=ruby_eval_code'), :tag
+      assert_equal find_options('%p{:alt => "Text to find"}=ruby_eval_code'),
+                   {:place => :attribute, :attribute_name => :alt}
+    end
+
     private
 
     def process_haml(haml)
