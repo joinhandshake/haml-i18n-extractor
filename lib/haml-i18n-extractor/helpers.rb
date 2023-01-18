@@ -18,7 +18,17 @@ module Haml
           def normalized_name(str)
             NOT_ALLOWED_IN_KEYNAME.each{ |rm_me| str.gsub!(rm_me, '') }
             str = str.gsub(/\s+/, ' ').strip.downcase
-            str.tr(' ', '_')[0..LIMIT_KEY_NAME]
+            str = str.tr(' ', '_')[0..LIMIT_KEY_NAME]
+
+            # Clean up keys that are the full key limit by removing
+            # the last word, which is often incomplete.
+            if str.length >= LIMIT_KEY_NAME - 1
+              str_arr = str.split('_')
+              str_arr.pop
+              str = str_arr.join('_')
+            end
+
+            str
           end
 
           def normalize_interpolation(str)
