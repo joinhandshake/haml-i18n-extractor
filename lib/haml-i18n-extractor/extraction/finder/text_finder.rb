@@ -62,22 +62,31 @@ module Haml
         end
 
         def tag(line)
-          title_value = extract_attribute(line, :title)
-          if string_value?(title_value)
-            FinderResult.new(:tag, title_value[1...-1].gsub(/['"]*/, ''), :place => :attribute, :attribute_name => :title)
-          else
+          tag_finder_results = []
+
+          if string_value?(value = extract_attribute(line, :title))
+            tag_finder_results << FinderResult.new(:tag, value[1...-1].gsub(/['"]*/, ''), :place => :attribute, :attribute_name => :title)
+          end
+
+          if string_value?(value = extract_attribute(line, :alt))
+            tag_finder_results << FinderResult.new(:tag, value[1...-1].gsub(/['"]*/, ''), :place => :attribute, :attribute_name => :alt)
+          end
+
+          if
             txt = line[:value][:value]
             if txt
               has_script_in_tag = line[:value][:parse] # %element= foo
               if has_script_in_tag && !ExceptionFinder.could_match?(txt)
-                FinderResult.new(:tag, '')
+                tag_finder_results << FinderResult.new(:tag, '')
               else
-                FinderResult.new(:tag, ExceptionFinder.new(txt).find, :place => :content)
+                tag_finder_results << FinderResult.new(:tag, ExceptionFinder.new(txt).find, :place => :content)
               end
             else
-              FinderResult.new(:tag, '')
+              tag_finder_results <<FinderResult.new(:tag, '')
             end
           end
+
+          tag_finder_results
         end
 
         def script(line)

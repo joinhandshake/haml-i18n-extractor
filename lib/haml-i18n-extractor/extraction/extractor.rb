@@ -150,18 +150,23 @@ module Haml
         @haml_reader.lines.each do |orig_line|
           orig_line, whitespace = handle_line_whitespace(orig_line.chomp)
           finder_result = finding_result(orig_line, line_no)
-          is_array_match = finder_result.match.is_a?(Array)
-          finder_result_matches = is_array_match ? finder_result.match : [finder_result.match]
+          finder_result_list = finder_result.is_a?(Array) ? finder_result : [finder_result]
 
-          replacement_info = []
-          finder_result_matches.each_with_index do |match, index|
-            replacer_result = replacement_result(orig_line, match, finder_result.type, line_no, finder_result.options)
-            if replacer_result.should_be_replaced
-              replacement_info.push(replacer_result.info)
-              replacements[line_no] = ["#{whitespace}#{replacer_result.modified_line}", replacement_info]
-              orig_line = replacer_result.modified_line
+          finder_result_list.each do |finder_result|
+            is_array_match = finder_result.match.is_a?(Array)
+            finder_result_matches = is_array_match ? finder_result.match : [finder_result.match]
+
+            replacement_info = []
+            finder_result_matches.each_with_index do |match, index|
+              replacer_result = replacement_result(orig_line, match, finder_result.type, line_no, finder_result.options)
+              if replacer_result.should_be_replaced
+                replacement_info.push(replacer_result.info)
+                replacements[line_no] = ["#{whitespace}#{replacer_result.modified_line}", replacement_info]
+                orig_line = replacer_result.modified_line
+              end
             end
           end
+
           line_no += 1
         end
         replacements
