@@ -6,7 +6,7 @@ module Haml
 
         TAG_REGEX = /%\w+/
         TAG_CLASSES_AND_ID_REGEX = /(?:[.#][\w\-\_]+)*/
-        TAG_ATTRIBUTES_REGEX = /\(.+\)|(?:\{[^}]+\})?/
+        TAG_ATTRIBUTES_REGEX = /\(.*?\)|(?:\{[^}]+\})?/
 
         attr_reader :full_line, :text_to_replace, :line_type
 
@@ -104,12 +104,16 @@ module Haml
               scanner.skip(TAG_REGEX)
               scanner.skip(TAG_CLASSES_AND_ID_REGEX)
               scanner.skip(TAG_ATTRIBUTES_REGEX)
-              if @options[:place] == :attribute && str.include?("#{@options[:attribute_name]}=#{keyname}")
-                # We specifically are adding interpolation to HTML style attributes.
-                # Without this, it is invalid syntax.
-                str.gsub!("#{@options[:attribute_name]}=#{keyname}", "#{@options[:attribute_name]}=\"#\{#{keyname}}\"")
-              elsif scanner.scan_until(/[\s]*#{Regexp.escape(keyname)}/) && !already_evaled?(scanner.pre_match)
+
+              # When we make the string a function, it now needs to be evaled
+              if scanner.scan_until(/[\s]*#{Regexp.escape(keyname)}/) && !already_evaled?(scanner.pre_match)
                 str[0..-1] = "#{scanner.pre_match}=#{scanner.matched}#{scanner.post_match}"
+              end
+
+              # We specifically are adding interpolation to HTML style attributes.
+              # Without this, it is invalid syntax.
+              if @options[:place] == :attribute && str.include?("#{@options[:attribute_name]}=#{keyname}")
+                str.gsub!("#{@options[:attribute_name]}=#{keyname}", "#{@options[:attribute_name]}=\"#\{#{keyname}}\"")
               end
             elsif @line_type == :plain || (@line_type == :script && !already_evaled?(full_line))
               str.gsub!(str, "= "+str)
