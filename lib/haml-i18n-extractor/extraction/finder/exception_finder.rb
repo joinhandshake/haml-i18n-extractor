@@ -85,6 +85,9 @@ module Haml
             str != "•" &&
               str != 'x' &&
               str != '×' &&
+              str != '+' &&
+              str != '|' &&
+              str != '‧' &&
               str != '*' &&
               str != '-' &&
               str != '(' &&

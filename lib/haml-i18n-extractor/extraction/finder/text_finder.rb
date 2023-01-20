@@ -57,7 +57,13 @@ module Haml
 
         def plain(line)
           txt = line[:value][:text]
+
           return nil if html_comment?(txt)
+
+          # Skip single character strings which are often UI elements rather than
+          # strings to be translated. Such as '|' or '+' or '*'.
+          return nil if txt.length == 1
+
           FinderResult.new(:plain, txt)
         end
 

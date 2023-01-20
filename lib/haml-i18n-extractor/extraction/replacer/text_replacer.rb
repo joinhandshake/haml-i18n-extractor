@@ -8,7 +8,7 @@ module Haml
         TAG_CLASSES_AND_ID_REGEX = /(?:[.#][\w\-\_]+)*/
         # First path: '\((?>[^)(]+|\g<0>)*\)' which finds balanced matching parentheses (). 
         # Second path: The same except for curly brackets '{}'
-        TAG_ATTRIBUTES_REGEX = /\((?>[^)(]+|\g<0>)*\)?|\{(?>[^)(]+|\g<0>)*\}?/
+        TAG_ATTRIBUTES_REGEX = /\((?>[^)(]+|\g<0>)*\)?|\{(?>[^}{}]+|\g<0>)*\}?/
 
         attr_reader :full_line, :text_to_replace, :line_type
 
