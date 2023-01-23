@@ -58,7 +58,12 @@ module Haml
         def build_result
           result_class = Haml::I18n::Extractor::ReplacerResult
           expression = @line_type == :script || tag_with_code? ? @text_to_replace[1...-1] : @text_to_replace
-          if expression.strip.match(/^#\{[^}]+\}$/)
+
+          # If (TODO figure out first condition intention) or if the line already has been translated,
+          # then it should not be replaced. This intentinoally
+          # includes strings which may not be fully localised but have translation function calls
+          # within them already - these should be manually resolved.
+          if expression.strip.match(/^#\{[^}]+\}$/) || has_been_translated?(@text_to_replace)
             result_class.new(nil, nil, @text_to_replace, false, @path)
           else
             result_class.new(modified_line, t_name, @text_to_replace, true, @path)
