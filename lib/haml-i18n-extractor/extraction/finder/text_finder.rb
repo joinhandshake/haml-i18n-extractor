@@ -71,11 +71,19 @@ module Haml
           tag_finder_results = []
 
           if string_value?(value = extract_attribute(line, :title))
-            tag_finder_results << FinderResult.new(:tag, value[1...-1].gsub(/['"]*/, ''), :place => :attribute, :attribute_name => :title)
+            tag_finder_results << FinderResult.new(:tag, value[1...-1], :place => :attribute, :attribute_name => :title)
           end
 
           if string_value?(value = extract_attribute(line, :alt))
-            tag_finder_results << FinderResult.new(:tag, value[1...-1].gsub(/['"]*/, ''), :place => :attribute, :attribute_name => :alt)
+            tag_finder_results << FinderResult.new(:tag, value[1...-1], :place => :attribute, :attribute_name => :alt)
+          end
+
+          if string_value?(value = extract_attribute(line, :placeholder))
+            tag_finder_results << FinderResult.new(:tag, value[1...-1], :place => :attribute, :attribute_name => :placeholder)
+          end
+
+          if string_value?(value = extract_attribute(line, 'aria-label'))
+            tag_finder_results << FinderResult.new(:tag, value[1...-1], :place => :attribute, :attribute_name => 'aria-label')
           end
 
           if
