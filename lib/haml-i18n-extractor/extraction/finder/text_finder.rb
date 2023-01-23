@@ -86,18 +86,24 @@ module Haml
             tag_finder_results << FinderResult.new(:tag, value[1...-1], :place => :attribute, :attribute_name => 'aria-label')
           end
 
-          if
-            txt = line[:value][:value]
-            if txt
-              has_script_in_tag = line[:value][:parse] # %element= foo
-              if has_script_in_tag && !ExceptionFinder.could_match?(txt)
-                tag_finder_results << FinderResult.new(:tag, '')
-              else
-                tag_finder_results << FinderResult.new(:tag, ExceptionFinder.new(txt).find, :place => :content)
-              end
+          txt = line[:value][:value]
+          if txt
+            has_script_in_tag = line[:value][:parse] # %element= foo
+            if has_script_in_tag && !ExceptionFinder.could_match?(txt)
+              tag_finder_results << FinderResult.new(:tag, '')
+            elsif has_script_in_tag
+              tag_finder_results << FinderResult.new(:tag, ExceptionFinder.new(txt).find, :place => :content)
             else
-              tag_finder_results <<FinderResult.new(:tag, '')
+              # This is a plain old string in a HTML tag which is a special case that can be directly forwarded. Avoid
+              # running regex which risks breaking such as if quotes are inside the plain string.
+              # Skip single character strings which are often UI elements rather than
+              # strings to be translated. Such as '|' or '+' or '*'. Also skip HTML comments
+              if txt.length > 1 && !html_comment?(txt)
+                tag_finder_results << FinderResult.new(:tag, txt, :place => :content)
+              end
             end
+          else
+            tag_finder_results << FinderResult.new(:tag, '')
           end
 
           tag_finder_results
