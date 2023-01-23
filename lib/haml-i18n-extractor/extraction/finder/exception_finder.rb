@@ -103,8 +103,9 @@ module Haml
               # This is a js function call - should be ignored
               !str.include?('()') &&
               # If a string is entirely downcase/upcase, it probably is not a string that should be
-              # translated and is instead a programmatic type string
-              str.downcase != str &&
+              # translated and is instead a programmatic type string. Some downcased strings are valid parts
+              # of sentences, so only select if no whitespace
+              str.downcase.gsub(' ', '') != str &&
               str.upcase != str &&
               # Try and exclude data-bind values as well as possible
               !str.include?("$data") &&
