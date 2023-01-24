@@ -120,7 +120,7 @@ module Haml
               !str.include?("yy") &&
               !str.include?("-mm-") &&
               !str.include?("-dd-") &&
-              !str.include?("h:mm") &&
+              !str.include?("h:mm")
           end
         end
 
