@@ -60,13 +60,35 @@ module Haml
           else
             existing_yaml_hash = {}
           end
+
+          existing_key_count = count_string_value_keys(existing_yaml_hash)
+          new_key_count = count_string_value_keys(yaml_hash)
+
           final_yaml_hash = sort_yaml_hash(existing_yaml_hash.deep_merge!(yaml_hash))
+
+          final_key_count = count_string_value_keys(final_yaml_hash)
+
+          if final_key_count != (existing_key_count + new_key_count)
+            puts "Original key count: #{existing_key_count}"
+            puts "New key count: #{new_key_count}"
+            puts "Final key count: #{final_key_count}"
+            raise "Key count after merge (#{final_key_count}) is not equal to previous two hash keys (#{(existing_key_count + new_key_count)}), a duplicate key overwrite would occur! Check for a file name equal to a sub-folder name in same directory..."
+          end
+
           f = File.open(pth, "w+")
           f.puts final_yaml_hash.to_yaml(:line_width => 400)
           f.flush
         end
 
         private
+
+        def count_string_value_keys(yaml_hash)
+          return 1 unless yaml_hash.is_a?(Hash)
+
+          rv = 0
+          yaml_hash.each { |k, v| rv += count_string_value_keys(v) }
+          rv
+        end
 
         def sort_yaml_hash(yaml_hash)
           return yaml_hash unless yaml_hash.is_a?(Hash)

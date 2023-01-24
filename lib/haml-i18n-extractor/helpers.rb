@@ -19,7 +19,7 @@ module Haml
           end
 
           def normalized_name(str)
-            NOT_ALLOWED_IN_KEYNAME.each{ |rm_me| str.gsub!(rm_me, '') }
+            NOT_ALLOWED_IN_KEYNAME.each { |rm_me| str.gsub!(rm_me, '') }
             str = str.gsub(/\s+/, ' ').strip.downcase
             str = str.tr(' ', '_')[0..LIMIT_KEY_NAME]
 
