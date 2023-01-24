@@ -114,7 +114,13 @@ module Haml
               !str.match(/[a-z]*-[a-z]*/) &&
               !str.match(/[a-z]*_[a-z]*/) &&
               !str.match(/[a-z]*\/[a-z]*/) &&
-              !str.match(/[a-z]: /)
+              # these will match knockout.js bindings
+              !str.match(/[a-z]: /) &&
+              # exclude any time / date formats
+              !str.include?("yy") &&
+              !str.include?("-mm-") &&
+              !str.include?("-dd-") &&
+              !str.include?("h:mm") &&
           end
         end
 
