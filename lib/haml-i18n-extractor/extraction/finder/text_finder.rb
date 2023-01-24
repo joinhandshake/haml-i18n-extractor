@@ -17,7 +17,7 @@ module Haml
 
         def process_by_regex
           # [ line_type, text_found ]
-          #output_debug if Haml::I18n::Extractor.debug?
+          # output_debug if Haml::I18n::Extractor.debug?
           result = @metadata && send("#{@metadata[:type]}", @metadata)
           result = FinderResult.new(nil, nil) if result.nil?
           result

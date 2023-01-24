@@ -165,6 +165,7 @@ module Haml
         end
 
         def gsub_replacement!(str, text_to_replace, keyname_method)
+          puts "[attribute = #{@options[:attribute_name]}] gsub_replacement!(#{str}, #{text_to_replace}, #{keyname_method})" if Haml::I18n::Extractor.debug?
           # FIXME refactor this method
           scanner = StringScanner.new(str.dup)
           str[0..-1] = ''
@@ -177,12 +178,14 @@ module Haml
               scanner.skip(TAG_REGEX)
               scanner.skip(TAG_CLASSES_AND_ID_REGEX)
               # Skip until we find the attribute key in the list of attributes
-              new_ruby_haml_format = "\b#{@options[:attribute_name]}:"
-              html_format = "\b#{@options[:attribute_name]}="
-              old_ruby_haml_format = ":#{@options[:attribute_name]}\s*=>\s"
-              string_key_ruby_format = "\"#{@options[:attribute_name]}}\":\s"
-              string_key_old_ruby_format = "\"#{@options[:attribute_name]}}\"\s*=>\s"
-              scanner.skip_until(/#{new_ruby_haml_format}|#{html_format}|#{old_ruby_haml_format}|#{string_key_ruby_format}|#{string_key_old_ruby_format}/)
+              attribute_regex = %r{
+                \b#{@options[:attribute_name]}:| # Ruby HAML format
+                \b#{@options[:attribute_name]}=| # HTML format
+                :#{@options[:attribute_name]}\s*=>\s*| # Old Ruby HAML format
+                \"#{@options[:attribute_name]}\":\s*| # String key ruby format
+                \"#{@options[:attribute_name]}\"\s*=>\s* # String key old ruby format
+              }x
+              scanner.skip_until(attribute_regex)
             end
           end
           scanner.scan_until(/(['"]|)#{Regexp.escape(text_to_replace)}\1/)
