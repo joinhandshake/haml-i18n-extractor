@@ -35,6 +35,7 @@ module Haml
             ";" => "seco",
             "\\" => "backslash",
             "/" => "slash",
+            "..." => "ellipsis",
             "." => "period",
             "|" => "pipe",
             ">" => "ra",
