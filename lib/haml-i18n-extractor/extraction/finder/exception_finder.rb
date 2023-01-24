@@ -13,7 +13,7 @@ module Haml
         FORM_SUBMIT_BUTTON_DOUBLE_Q = /[a-z]\.submit\s?["](.*?)["].*$/
         # get quoted strings that are not preceded by t( - not translated
         # based on https://www.metaltoad.com/blog/regex-quoted-string-escapable-quotes
-        QUOTED_STRINGS = /((?<![\\]|t\()['"])((?:.(?!(?<![\\])\1))*.?)\1/
+        QUOTED_STRINGS = /((?<![\\])['"])((?:.(?!(?<![\\])\1))*.?)\1/
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
 
         RENDER_PARTIAL_MATCH = /render[\s*](layout:[\s*])?['"](.*?)['"].*$/
@@ -52,6 +52,7 @@ module Haml
             ret = nil
           elsif @text.match(QUOTED_STRINGS) || @text.match(RENDER_PARTIAL_MATCH) || @text.match(COMPONENT_MATCH)
             ret = @text.scan(QUOTED_STRINGS).flatten
+            ret = filter_out_already_translated(ret, @text)
             ret = filter_out_invalid_quoted_strings(ret)
             ret = filter_out_partial_renders(ret, @text)
             ret = filter_out_component_methods(ret, @text)
@@ -68,6 +69,14 @@ module Haml
           ret = filter_out_non_words(ret)
 
           ret
+        end
+
+        # If the regex-found string is wrapped by a `t()` call already, then we should
+        # not translate it - it already is.
+        def filter_out_already_translated(arr, full_text)
+          arr.select do |str|
+            !full_text.include?("t(#{str})")
+          end
         end
 
         # Remove any matches that are just quote marks

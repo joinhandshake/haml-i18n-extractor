@@ -54,8 +54,16 @@ module Haml
           def normalized_name(str)
             # In order to avoid a situation where a string like 'School:" has the same key as "School..." or "School -" let's
             # add some string based indicators for parts of the string to build unique keys". Wrap the new value with a space
-            # for proper word dilenation from rest of string
-            NOT_ALLOWED_IN_KEYNAME.each { |rm_me, new_val| str.gsub!(rm_me, " #{new_val} ") }
+            # for proper word dilenation from rest of string. The only exception is '#', '{', '}', '@', '.' which are used for interpolation
+            # and downstream consumers of this name rely on being removed for proper behavior.
+            NOT_ALLOWED_IN_KEYNAME.each do |rm_me, new_val|
+              # Don't mess with #{@var.foo} interpolation in particular.
+              if rm_me == "#" || rm_me == "{" || rm_me == "}" || rm_me == "@" || rm_me == "."
+                str.gsub!(rm_me, '')
+              else
+                str.gsub!(rm_me, " #{new_val} ")
+              end
+            end
             str = str.gsub(/\s+/, ' ').strip.downcase
             str = str.tr(' ', '_')[0..LIMIT_KEY_NAME]
 
