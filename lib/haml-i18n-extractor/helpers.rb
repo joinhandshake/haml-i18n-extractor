@@ -60,6 +60,8 @@ module Haml
               # Don't mess with #{@var.foo} interpolation in particular.
               if rm_me == "#" || rm_me == "{" || rm_me == "}" || rm_me == "@" || rm_me == "."
                 str.gsub!(rm_me, '')
+              elsif rm_me == "'"
+                str.gsub!(rm_me, '') # For key cleanliness, don't bother with apostrophes
               else
                 str.gsub!(rm_me, " #{new_val} ")
               end
