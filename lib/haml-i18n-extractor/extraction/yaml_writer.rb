@@ -68,11 +68,14 @@ module Haml
 
           final_key_count = count_string_value_keys(final_yaml_hash)
 
+          # In some cases this is valid and expected such as running on a file which
+          # was only partially localized, but in some cases it is not - let the user know.
           if final_key_count != (existing_key_count + new_key_count)
             puts "Original key count: #{existing_key_count}"
             puts "New key count: #{new_key_count}"
             puts "Final key count: #{final_key_count}"
-            raise "Key count after merge (#{final_key_count}) is not equal to previous two hash keys (#{(existing_key_count + new_key_count)}), a duplicate key overwrite would occur! Check for a file name equal to a sub-folder name in same directory..."
+            puts yaml_hash.to_yaml
+            puts "Key count after merge (#{final_key_count}) is not equal to previous two hash keys (#{(existing_key_count + new_key_count)}), a duplicate key overwrite would occur! Check for a file name equal to a sub-folder name in same directory..."
           end
 
           f = File.open(pth, "w+")

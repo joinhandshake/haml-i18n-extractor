@@ -119,8 +119,9 @@ module Haml
 
               # We specifically are adding interpolation to HTML style attributes.
               # Without this, it is invalid syntax.
-              if @options[:place] == :attribute && str.include?("#{@options[:attribute_name]}=#{keyname}")
-                str.gsub!("#{@options[:attribute_name]}=#{keyname}", "#{@options[:attribute_name]}=\"#\{#{keyname}}\"")
+              if @options[:place] == :attribute
+                html_key_value_regex = /#{Regexp.escape(@options[:attribute_name])}\s?=\s?#{Regexp.escape(keyname)}/
+                str.gsub!(html_key_value_regex, "#{@options[:attribute_name]}=\"#\{#{keyname}}\"")
               end
             elsif @line_type == :plain || (@line_type == :script && !already_evaled?(full_line))
               str.gsub!(str, "= "+str)
@@ -179,8 +180,8 @@ module Haml
               scanner.skip(TAG_CLASSES_AND_ID_REGEX)
               # Skip until we find the attribute key in the list of attributes
               attribute_regex = %r{
-                \b#{@options[:attribute_name]}:| # Ruby HAML format
-                \b#{@options[:attribute_name]}=| # HTML format
+                \b#{@options[:attribute_name]}:\s*| # Ruby HAML format
+                \b#{@options[:attribute_name]}=\s*| # HTML format
                 :#{@options[:attribute_name]}\s*=>\s*| # Old Ruby HAML format
                 \"#{@options[:attribute_name]}\":\s*| # String key ruby format
                 \"#{@options[:attribute_name]}\"\s*=>\s* # String key old ruby format
