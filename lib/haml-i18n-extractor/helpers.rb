@@ -65,7 +65,7 @@ module Haml
           end
 
           def html_comment?(txt)
-            txt.match(/<!--/) || txt.match(/-->\s*$/)
+            txt.match(/<!--/) || txt.match(/-->\s*$/) || txt.match(/lang: \w/)
           end
 
         end
