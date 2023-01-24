@@ -110,6 +110,10 @@ module Haml
               # Try and exclude data-bind values as well as possible
               !str.include?("$data") &&
               !str.include?("$parent") &&
+              # looking for programmatic strings like 'class-name' or 'id_name' or 'partial/render'
+              !str.match(/[a-z]*-[a-z]*/) &&
+              !str.match(/[a-z]*_[a-z]*/) &&
+              !str.match(/[a-z]*\/[a-z]*/) &&
               !str.match(/[a-z]: /)
           end
         end

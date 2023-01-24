@@ -176,9 +176,13 @@ module Haml
             elsif @options[:place] == :attribute
               scanner.skip(TAG_REGEX)
               scanner.skip(TAG_CLASSES_AND_ID_REGEX)
-              # Skip until 'attribute:' or 'attribute=' or ':attribute => '. The middle one is HTML style
-              # attributes, the other two are HAML style attributes
-              scanner.skip_until(/\b#{@options[:attribute_name]}:|\b#{@options[:attribute_name]}=|:#{@options[:attribute_name]}\s*=>\s*/)
+              # Skip until we find the attribute key in the list of attributes
+              new_ruby_haml_format = "\b#{@options[:attribute_name]}:"
+              html_format = "\b#{@options[:attribute_name]}="
+              old_ruby_haml_format = ":#{@options[:attribute_name]}\s*=>\s"
+              string_key_ruby_format = "\"#{@options[:attribute_name]}}\":\s"
+              string_key_old_ruby_format = "\"#{@options[:attribute_name]}}\"\s*=>\s"
+              scanner.skip_until(/#{new_ruby_haml_format}|#{html_format}|#{old_ruby_haml_format}|#{string_key_ruby_format}|#{string_key_old_ruby_format}/)
             end
           end
           scanner.scan_until(/(['"]|)#{Regexp.escape(text_to_replace)}\1/)

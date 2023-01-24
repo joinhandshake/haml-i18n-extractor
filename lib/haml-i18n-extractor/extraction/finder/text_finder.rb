@@ -1,5 +1,6 @@
 require 'haml'
 require 'haml/parser'
+
 module Haml
   module I18n
     class Extractor
@@ -36,6 +37,25 @@ module Haml
 
         def extract_attribute(line, attribute_name)
           value = line[:value][:attributes][attribute_name.to_s]
+
+          # HAML parser also has a concept of dynamic_attributes, fall back
+          # to that if not found in :attributes. These are stored on the `old` or `new`
+          # attributes on the dynamic attributes struct in String format. We are doing a ruby eval so
+          # rescue an error in case the attribute is not found
+          if !value && line[:value][:dynamic_attributes] && line[:value][:dynamic_attributes].old
+            begin
+              value = eval(line[:value][:dynamic_attributes].old)[attribute_name]
+            rescue
+            end
+          end
+
+          if !value && line[:value][:dynamic_attributes] && line[:value][:dynamic_attributes].new
+            begin
+              value = eval(line[:value][:dynamic_attributes].new)[attribute_name]
+            rescue
+            end
+          end
+
           if value
             "\"#{value}\""
           else
@@ -98,7 +118,7 @@ module Haml
               # running regex which risks breaking such as if quotes are inside the plain string.
               # Skip single character strings which are often UI elements rather than
               # strings to be translated. Such as '|' or '+' or '*'. Also skip HTML comments
-              if txt.length > 1 && !html_comment?(txt)
+              if txt.length > 1 && !html_comment?(txt) && !ExceptionFinder.new(txt).filter_out_non_words(txt).empty?
                 tag_finder_results << FinderResult.new(:tag, txt, :place => :content)
               end
             end
