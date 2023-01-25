@@ -135,8 +135,10 @@ module Haml
             match = ExceptionFinder.new(txt).find
             if (match.is_a?(Array))
               FinderResult.new(:script_array, match)
-            else
+            elsif match
               FinderResult.new(:script, match)
+            else
+              FinderResult.new(:script, "")
             end
           else
             FinderResult.new(:script, "")

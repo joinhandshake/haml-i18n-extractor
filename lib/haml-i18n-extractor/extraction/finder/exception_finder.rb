@@ -11,7 +11,7 @@ module Haml
 
         FORM_SUBMIT_BUTTON_SINGLE_Q = /[a-z]\.submit\s?['](.*?)['].*$/
         FORM_SUBMIT_BUTTON_DOUBLE_Q = /[a-z]\.submit\s?["](.*?)["].*$/
-        # get quoted strings that are not preceded by t( - not translated
+        # get quoted strings that are not comments
         # based on https://www.metaltoad.com/blog/regex-quoted-string-escapable-quotes
         QUOTED_STRINGS = /((?<![\\])['"])((?:.(?!(?<![\\])\1))*.?)\1/
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
@@ -76,7 +76,7 @@ module Haml
         def filter_out_already_translated(arr, full_text)
           arr.select do |str|
             # look for `t(str`. No closing `)` in case of variable interpolation happening.
-            !full_text.include?("t(#{str}")
+            !full_text.include?("t(#{str}") && !full_text.include?("t('#{str}'")  && !full_text.include?("t(\"#{str}\"")
           end
         end
 
