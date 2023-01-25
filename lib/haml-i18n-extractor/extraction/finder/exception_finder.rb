@@ -75,7 +75,8 @@ module Haml
         # not translate it - it already is.
         def filter_out_already_translated(arr, full_text)
           arr.select do |str|
-            !full_text.include?("t(#{str})")
+            # look for `t(str`. No closing `)` in case of variable interpolation happening.
+            !full_text.include?("t(#{str}")
           end
         end
 
