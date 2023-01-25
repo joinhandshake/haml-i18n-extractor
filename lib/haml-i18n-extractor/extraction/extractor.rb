@@ -104,7 +104,13 @@ module Haml
       # refactor more?
       def process_line(orig_line, line_no)
         orig_line.chomp!
-        replacement, replacement_info = replacements[line_no]
+
+        # A line can have multiple replacements, but we are only interested in the
+        # final result of all replacements when asking user for action / writing the new
+        # body to file.
+        final_replacement = replacements[line_no]&.last
+
+        replacement, replacement_info = final_replacement
 
         user_action = replacement ? user_action_yes : user_action_no
 
@@ -120,7 +126,13 @@ module Haml
         elsif user_action.next?
           raise AbortFile, "stopping to process the rest of the file"
         elsif user_action.replace_line?
-          add_to_yaml_info(line_no, replacement_info)
+          # Although we only want to write the final line to the body, we need to gather all replacements
+          # for writing the YAML file and ensuring all replacement keys exist in the locale file
+          replacements[line_no].each do |replacement_instance|
+            _, replacement_instance_info = replacement_instance
+            add_to_yaml_info(line_no, replacement_instance_info)
+          end
+
           add_to_body(replacement)
         elsif user_action.no_replace?
           add_to_yaml_info(line_no, [Haml::I18n::Extractor::ReplacerResult.new(nil, nil, nil, false, nil).info])
@@ -159,9 +171,14 @@ module Haml
             replacement_info = []
             finder_result_matches.each_with_index do |match, index|
               replacer_result = replacement_result(orig_line, match, finder_result.type, line_no, finder_result.options)
+
               if replacer_result.should_be_replaced
                 replacement_info.push(replacer_result.info)
-                replacements[line_no] = ["#{whitespace}#{replacer_result.modified_line}", replacement_info]
+
+                # We can have multiple replacements per line
+                replacements[line_no] ||= []
+                replacements[line_no] << ["#{whitespace}#{replacer_result.modified_line}", replacement_info]
+
                 orig_line = replacer_result.modified_line
               end
             end
@@ -192,7 +209,8 @@ module Haml
       end
 
       def add_to_yaml_info(line_no, hash)
-        @info_for_yaml[line_no] = hash
+        @info_for_yaml[line_no] ||= []
+        @info_for_yaml[line_no] << hash
       end
 
       def finding_result(orig_line, lineno)
