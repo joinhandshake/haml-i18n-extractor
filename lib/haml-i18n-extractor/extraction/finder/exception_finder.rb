@@ -56,6 +56,7 @@ module Haml
             ret = filter_out_invalid_quoted_strings(ret)
             ret = filter_out_partial_renders(ret, @text)
             ret = filter_out_component_methods(ret, @text)
+            ret = filter_out_data_bind_values(ret, @text)
             ret = ret.length > 1 ? ret : ret[0]
           else
             EXCEPTION_MATCHES.each do |regex|
@@ -143,12 +144,7 @@ module Haml
           return arr unless partial_name != nil
 
           arr.select do |str|
-            str != partial_name &&
-              # Anything with these characters in them we assume is not a string
-              # we want to translate, but rather a programmatic string
-              !str.include?('-') &&
-              !str.include?('_') &&
-              !str.include?('/')
+            str != partial_name
           end
         end
 
@@ -167,6 +163,26 @@ module Haml
               !str.include?('-') &&
               !str.include?('_') &&
               !str.include?('/')
+          end
+        end
+
+        def filter_out_data_bind_values(arr, full_text)
+          # match a data-bind key/value assignment figure out
+          # the string equaling the partial being rendered in the full_text
+          data_bind_regex = %r{
+            ['"]data-bind['"]\s*:\s*['"](.*)['"]| # Ruby HAML format
+            ['"]data-bind['"]\s*=>\s*['"](.*)['"]| # Old Ruby HAML format
+            data-bind\s=\s['"](.*)['"]| # HTML format
+            bind\s:\s['"](.*)['"] # HAML format where the data-bind is nested
+          }x
+          full_text.match(data_bind_regex)
+          data_bind_value = $1
+
+          return arr unless data_bind_value != nil
+          puts "Found data-bind value of '#{data_bind_value}', ignoring" if Haml::I18n::Extractor.debug?
+
+          arr.select do |str|
+            str != data_bind_value
           end
         end
       end
