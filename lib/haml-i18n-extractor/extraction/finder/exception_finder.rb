@@ -151,7 +151,7 @@ module Haml
           full_text.match(RENDER_PARTIAL_MATCH)
           partial_name = $2
 
-          return arr unless partial_name != nil
+          return arr if partial_name.nil?
 
           arr.select do |str|
             str != partial_name
@@ -164,7 +164,7 @@ module Haml
           full_text.match(COMPONENT_MATCH)
           component_name = $2
 
-          return arr unless component_name != nil
+          return arr if component_name.nil?
 
           arr.select do |str|
             str != component_name &&
@@ -185,11 +185,14 @@ module Haml
             data-bind\s*=\s*['"](.*)['"]| # HTML format
             bind\s*:\s*['"](.*)['"] # HAML format where the data-bind is nested
           }x
-          full_text.match(data_bind_regex)
-          data_bind_value = $1
+          matches = full_text.match(data_bind_regex)
+          return arr unless matches&.captures
 
-          return arr unless data_bind_value != nil
-          puts "Found data-bind value of '#{data_bind_value}', ignoring" if Haml::I18n::Extractor.debug?
+          # There are numerous possible captures depending on format, find the first one that matched
+          data_bind_value = matches.captures.compact.first
+          return arr if data_bind_value.nil?
+
+          puts "[data-bind] Found data-bind value of '#{data_bind_value}', ignoring" if Haml::I18n::Extractor.debug?
 
           arr.select do |str|
             str != data_bind_value
