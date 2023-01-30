@@ -125,8 +125,9 @@ module Haml
               !str.match(/[a-z]*-[a-z]*/) &&
               !str.match(/[a-z]*_[a-z]*/) &&
               !str.match(/[a-z]*\/[a-z]*/) &&
-              # these will match knockout.js bindings
-              !str.match(/[a-z]: /) &&
+              # these will match knockout.js bindings FIXME: too broad, is this needed
+              # anymore with filter_out_data_bind_values?
+              # !str.match(/\b[a-z]:\s?/) &&
               # exclude any time / date formats
               !str.include?("yy") &&
               !str.include?("-mm-") &&
@@ -172,8 +173,8 @@ module Haml
           data_bind_regex = %r{
             ['"]data-bind['"]\s*:\s*['"](.*)['"]| # Ruby HAML format
             ['"]data-bind['"]\s*=>\s*['"](.*)['"]| # Old Ruby HAML format
-            data-bind\s=\s['"](.*)['"]| # HTML format
-            bind\s:\s['"](.*)['"] # HAML format where the data-bind is nested
+            data-bind\s*=\s*['"](.*)['"]| # HTML format
+            bind\s*:\s*['"](.*)['"] # HAML format where the data-bind is nested
           }x
           full_text.match(data_bind_regex)
           data_bind_value = $1
