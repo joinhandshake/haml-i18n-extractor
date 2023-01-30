@@ -12,8 +12,12 @@ module Haml
         FORM_SUBMIT_BUTTON_SINGLE_Q = /[a-z]\.submit\s?['](.*?)['].*$/
         FORM_SUBMIT_BUTTON_DOUBLE_Q = /[a-z]\.submit\s?["](.*?)["].*$/
         # get quoted strings that are not comments
-        # based on https://www.metaltoad.com/blog/regex-quoted-string-escapable-quotes
-        QUOTED_STRINGS = /((?<![\\])['"])((?:.(?!(?<![\\])\1))*.?)\1/
+        # based on https://davidwells.io/snippets/regex-match-outer-double-quotes. This
+        # has a capture case for both single quotes and double quotes. It will properly ignore
+        # escaped quotes inside the quoted string such as "this \"escaped\" quote". Do note though that
+        # this regex will leave the quotes on the string, unlike the other EXCEPTION_MATCHES, so they need to
+        # be removed from the results.
+        QUOTED_STRINGS = /('[^\\']*(\\'[^\\']*)*'|"[^\\"]*(\\"[^\\"]*)*")/
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
 
         RENDER_PARTIAL_MATCH = /render[\s*](layout:[\s*])?['"](.*?)['"].*$/
@@ -50,8 +54,9 @@ module Haml
             ret = $1.gsub(/['"]/,'').split(', ')
           elsif @text.match(SIMPLE_FORM_FOR) || @text == 'data-bind'
             ret = nil
-          elsif @text.match(QUOTED_STRINGS) || @text.match(RENDER_PARTIAL_MATCH) || @text.match(COMPONENT_MATCH)
+          elsif @text.match(QUOTED_STRINGS)
             ret = @text.scan(QUOTED_STRINGS).flatten
+            ret = remove_nils_and_quotes_from_quoted_strings(ret)
             ret = filter_out_already_translated(ret, @text)
             ret = filter_out_invalid_quoted_strings(ret)
             ret = filter_out_partial_renders(ret, @text)
@@ -70,6 +75,10 @@ module Haml
           ret = filter_out_non_words(ret)
 
           ret
+        end
+
+        def remove_nils_and_quotes_from_quoted_strings(arr)
+          arr.select { |str| !str.nil? }.map { |str| str[1..-2] }
         end
 
         # If the regex-found string is wrapped by a `t()` call already, then we should
