@@ -49,7 +49,10 @@ module Haml
         end
 
         def find
+          # Note that it's possible for plain strings which do not match any of the below criteria
+          # to get all the way to the end with original `@text` value.
           ret = @text
+
           if @text.match(ARRAY_OF_STRINGS)
             ret = $1.gsub(/['"]/,'').split(', ')
           elsif @text.match(SIMPLE_FORM_FOR)
@@ -62,6 +65,7 @@ module Haml
             ret = filter_out_partial_renders(ret, @text)
             ret = filter_out_component_methods(ret, @text)
             ret = filter_out_data_bind_values(ret, @text)
+            ret = filter_out_programmatic_strings(ret, @text)
             ret = ret.length > 1 ? ret : ret[0]
           else
             EXCEPTION_MATCHES.each do |regex|
@@ -72,7 +76,6 @@ module Haml
             end
           end
 
-          ret = filter_out_data_bind_values(ret, @text)
           ret = filter_out_non_words(ret)
 
           ret
@@ -117,32 +120,7 @@ module Haml
               str != '}' &&
               str != '[' &&
               str != ']' &&
-              str != '&times;' &&
-              # Skip any strings which are time / date formatting strings such as %Y or %B.
-              # Match '%' followed by 1 alpha-numeric character
-              !str.match(/\%\w/) &&
-              # This is a js function call - should be ignored
-              !str.include?('()') &&
-              # If a string is entirely downcase/upcase, it probably is not a string that should be
-              # translated and is instead a programmatic type string. Some downcased strings are valid parts
-              # of sentences, so only select if no whitespace
-              str.downcase.gsub(' ', '') != str &&
-              str.upcase != str &&
-              # Try and exclude data-bind values as well as possible
-              !str.include?("$data") &&
-              !str.include?("$parent") &&
-              # looking for programmatic strings like 'class-name' or 'id_name' or 'partial/render'
-              !str.match(/\b[a-z]+-[a-z]+\b/) &&
-              !str.match(/\b[a-z]+_[a-z]+\b/) &&
-              !str.match(/\b[a-z]+\/[a-z]+\b/) &&
-              # these will match knockout.js bindings FIXME: too broad, is this needed
-              # anymore with filter_out_data_bind_values?
-              # !str.match(/\b[a-z]:\s?/) &&
-              # exclude any time / date formats
-              !str.include?("yy") &&
-              !str.include?("-mm-") &&
-              !str.include?("-dd-") &&
-              !str.include?("h:mm")
+              str != '&times;'
           end
         end
 
@@ -207,6 +185,41 @@ module Haml
 
           arr.select do |str|
             str != data_bind_value
+          end
+        end
+
+        # For quoted strings only - filter out strings that are programmatic, rather than
+        # human-read sentences or words.
+        def filter_out_programmatic_strings(arr, full_text)
+          return nil if arr.nil?
+
+          arr = arr.is_a?(Array) ? arr : [arr]
+          arr.compact.select do |str|
+              # Skip any strings which are time / date formatting strings such as %Y or %B.
+              # Match '%' followed by 1 alpha-numeric character
+              !str.match(/\%\w/) &&
+              # This is a js function call - should be ignored
+              !str.include?('()') &&
+              # If a string is entirely downcase/upcase, it probably is not a string that should be
+              # translated and is instead a programmatic type string. Some downcased strings are valid parts
+              # of sentences, so only select if no whitespace
+              str.downcase.gsub(' ', '') != str &&
+              str.upcase != str &&
+              # Try and exclude data-bind values as well as possible
+              !str.include?("$data") &&
+              !str.include?("$parent") &&
+              # looking for programmatic strings like 'class-name' or 'id_name' or 'partial/render'
+              !str.match(/\b[a-z]+-[a-z]+\b/) &&
+              !str.match(/\b[a-z]+_[a-z]+\b/) &&
+              !str.match(/\b[a-z]+\/[a-z]+\b/) &&
+              # these will match knockout.js bindings FIXME: too broad, is this needed
+              # anymore with filter_out_data_bind_values?
+              # !str.match(/\b[a-z]:\s?/) &&
+              # exclude any time / date formats
+              !str.include?("yy") &&
+              !str.include?("-mm-") &&
+              !str.include?("-dd-") &&
+              !str.include?("h:mm")
           end
         end
       end
