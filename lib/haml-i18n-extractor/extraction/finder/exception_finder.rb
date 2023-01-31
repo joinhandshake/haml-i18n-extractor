@@ -52,7 +52,7 @@ module Haml
           ret = @text
           if @text.match(ARRAY_OF_STRINGS)
             ret = $1.gsub(/['"]/,'').split(', ')
-          elsif @text.match(SIMPLE_FORM_FOR) || @text == 'data-bind'
+          elsif @text.match(SIMPLE_FORM_FOR)
             ret = nil
           elsif @text.match(QUOTED_STRINGS)
             ret = @text.scan(QUOTED_STRINGS).flatten
@@ -72,6 +72,7 @@ module Haml
             end
           end
 
+          ret = filter_out_data_bind_values(ret, @text)
           ret = filter_out_non_words(ret)
 
           ret
@@ -177,13 +178,23 @@ module Haml
         end
 
         def filter_out_data_bind_values(arr, full_text)
+          return nil if arr.nil?
+
+          arr = arr.is_a?(Array) ? arr : [arr]
+
           # match a data-bind key/value assignment figure out
           # the string equaling the partial being rendered in the full_text
+          # TODO: This handles either `'` or `"` wrapped values, but does not handle
+          # escaped quotes yet
           data_bind_regex = %r{
-            ['"]data-bind['"]\s*:\s*['"](.*)['"]| # Ruby HAML format
-            ['"]data-bind['"]\s*=>\s*['"](.*)['"]| # Old Ruby HAML format
-            data-bind\s*=\s*['"](.*)['"]| # HTML format
-            bind\s*:\s*['"](.*)['"] # HAML format where the data-bind is nested
+            ['"]data-bind['"]\s*:\s*'(.*?)'| # Ruby HAML format
+            ['"]data-bind['"]\s*:\s*"(.*?)"| # Ruby HAML format
+            ['"]data-bind['"]\s*=>\s*'(.*?)'| # Old Ruby HAML format
+            ['"]data-bind['"]\s*=>\s*"(.*?)"| # Old Ruby HAML format
+            data-bind\s*=\s*'(.*?)'| # HTML format
+            data-bind\s*=\s*"(.*?)"| # HTML format
+            bind\s*:\s*'(.*?)'| # HAML format where the data-bind is nested
+            bind\s*:\s*"(.*?)" # HAML format where the data-bind is nested
           }x
           matches = full_text.match(data_bind_regex)
           return arr unless matches&.captures
@@ -192,7 +203,7 @@ module Haml
           data_bind_value = matches.captures.compact.first
           return arr if data_bind_value.nil?
 
-          puts "[data-bind] Found data-bind value of '#{data_bind_value}', ignoring" if Haml::I18n::Extractor.debug?
+          puts "[data-bind] Found data-bind value, skipping '#{data_bind_value}'" if Haml::I18n::Extractor.debug?
 
           arr.select do |str|
             str != data_bind_value
