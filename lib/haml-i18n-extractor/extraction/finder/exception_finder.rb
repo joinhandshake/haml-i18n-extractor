@@ -204,9 +204,9 @@ module Haml
               # Try and exclude data-bind values as well as possible
               !str.include?("$data") &&
               !str.include?("$parent") &&
-              # looking for programmatic strings like 'class-name' or 'id_name' or 'partial/render'
+              # looking for programmatic strings like 'class-name' or 'partial/render'. we do not rule out
+              # strings with 'under_score' since those are common in interpolation in ruby code variable refs.
               !str.match(/\b[a-z]+-[a-z]+\b/) &&
-              !str.match(/\b[a-z]+_[a-z]+\b/) &&
               !str.match(/\b[a-z]+\/[a-z]+\b/) &&
               # these will match knockout.js bindings FIXME: too broad, is this needed
               # anymore with filter_out_data_bind_values?
