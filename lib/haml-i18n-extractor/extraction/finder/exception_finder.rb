@@ -12,8 +12,12 @@ module Haml
         FORM_SUBMIT_BUTTON_SINGLE_Q = /[a-z]\.submit\s?['](.*?)['].*$/
         FORM_SUBMIT_BUTTON_DOUBLE_Q = /[a-z]\.submit\s?["](.*?)["].*$/
         # get quoted strings that are not comments
-        # based on https://www.metaltoad.com/blog/regex-quoted-string-escapable-quotes
-        QUOTED_STRINGS = /((?<![\\])['"])((?:.(?!(?<![\\])\1))*.?)\1/
+        # based on https://davidwells.io/snippets/regex-match-outer-double-quotes. This
+        # has a capture case for both single quotes and double quotes. It will properly ignore
+        # escaped quotes inside the quoted string such as "this \"escaped\" quote". Do note though that
+        # this regex will leave the quotes on the string, unlike the other EXCEPTION_MATCHES, so they need to
+        # be removed from the results.
+        QUOTED_STRINGS = /('[^\\']*(\\'[^\\']*)*'|"[^\\"]*(\\"[^\\"]*)*")/
         ARRAY_OF_STRINGS = /^[\s]?\[(.*)\]/
 
         RENDER_PARTIAL_MATCH = /render[\s*](layout:[\s*])?['"](.*?)['"].*$/
@@ -48,14 +52,16 @@ module Haml
           ret = @text
           if @text.match(ARRAY_OF_STRINGS)
             ret = $1.gsub(/['"]/,'').split(', ')
-          elsif @text.match(SIMPLE_FORM_FOR) || @text == 'data-bind'
+          elsif @text.match(SIMPLE_FORM_FOR)
             ret = nil
-          elsif @text.match(QUOTED_STRINGS) || @text.match(RENDER_PARTIAL_MATCH) || @text.match(COMPONENT_MATCH)
+          elsif @text.match(QUOTED_STRINGS)
             ret = @text.scan(QUOTED_STRINGS).flatten
+            ret = remove_nils_and_quotes_from_quoted_strings(ret)
             ret = filter_out_already_translated(ret, @text)
             ret = filter_out_invalid_quoted_strings(ret)
             ret = filter_out_partial_renders(ret, @text)
             ret = filter_out_component_methods(ret, @text)
+            ret = filter_out_data_bind_values(ret, @text)
             ret = ret.length > 1 ? ret : ret[0]
           else
             EXCEPTION_MATCHES.each do |regex|
@@ -66,9 +72,14 @@ module Haml
             end
           end
 
+          ret = filter_out_data_bind_values(ret, @text)
           ret = filter_out_non_words(ret)
 
           ret
+        end
+
+        def remove_nils_and_quotes_from_quoted_strings(arr)
+          arr.select { |str| !str.nil? }.map { |str| str[1..-2] }
         end
 
         # If the regex-found string is wrapped by a `t()` call already, then we should
@@ -124,8 +135,9 @@ module Haml
               !str.match(/[a-z]*-[a-z]*/) &&
               !str.match(/[a-z]*_[a-z]*/) &&
               !str.match(/[a-z]*\/[a-z]*/) &&
-              # these will match knockout.js bindings
-              !str.match(/[a-z]: /) &&
+              # these will match knockout.js bindings FIXME: too broad, is this needed
+              # anymore with filter_out_data_bind_values?
+              # !str.match(/\b[a-z]:\s?/) &&
               # exclude any time / date formats
               !str.include?("yy") &&
               !str.include?("-mm-") &&
@@ -140,15 +152,10 @@ module Haml
           full_text.match(RENDER_PARTIAL_MATCH)
           partial_name = $2
 
-          return arr unless partial_name != nil
+          return arr if partial_name.nil?
 
           arr.select do |str|
-            str != partial_name &&
-              # Anything with these characters in them we assume is not a string
-              # we want to translate, but rather a programmatic string
-              !str.include?('-') &&
-              !str.include?('_') &&
-              !str.include?('/')
+            str != partial_name
           end
         end
 
@@ -158,7 +165,7 @@ module Haml
           full_text.match(COMPONENT_MATCH)
           component_name = $2
 
-          return arr unless component_name != nil
+          return arr if component_name.nil?
 
           arr.select do |str|
             str != component_name &&
@@ -167,6 +174,39 @@ module Haml
               !str.include?('-') &&
               !str.include?('_') &&
               !str.include?('/')
+          end
+        end
+
+        def filter_out_data_bind_values(arr, full_text)
+          return nil if arr.nil?
+
+          arr = arr.is_a?(Array) ? arr : [arr]
+
+          # match a data-bind key/value assignment figure out
+          # the string equaling the partial being rendered in the full_text
+          # TODO: This handles either `'` or `"` wrapped values, but does not handle
+          # escaped quotes yet
+          data_bind_regex = %r{
+            ['"]data-bind['"]\s*:\s*'(.*?)'| # Ruby HAML format
+            ['"]data-bind['"]\s*:\s*"(.*?)"| # Ruby HAML format
+            ['"]data-bind['"]\s*=>\s*'(.*?)'| # Old Ruby HAML format
+            ['"]data-bind['"]\s*=>\s*"(.*?)"| # Old Ruby HAML format
+            data-bind\s*=\s*'(.*?)'| # HTML format
+            data-bind\s*=\s*"(.*?)"| # HTML format
+            bind\s*:\s*'(.*?)'| # HAML format where the data-bind is nested
+            bind\s*:\s*"(.*?)" # HAML format where the data-bind is nested
+          }x
+          matches = full_text.match(data_bind_regex)
+          return arr unless matches&.captures
+
+          # There are numerous possible captures depending on format, find the first one that matched
+          data_bind_value = matches.captures.compact.first
+          return arr if data_bind_value.nil?
+
+          puts "[data-bind] Found data-bind value, skipping '#{data_bind_value}'" if Haml::I18n::Extractor.debug?
+
+          arr.select do |str|
+            str != data_bind_value
           end
         end
       end
