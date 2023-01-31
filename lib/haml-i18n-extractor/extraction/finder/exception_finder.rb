@@ -120,7 +120,8 @@ module Haml
               str != '}' &&
               str != '[' &&
               str != ']' &&
-              str != '&times;'
+              str != '&times;' &&
+              str != '&nbsp;x'
           end
         end
 
@@ -146,12 +147,7 @@ module Haml
           return arr if component_name.nil?
 
           arr.select do |str|
-            str != component_name &&
-              # Anything with these characters in them we assume is not a string
-              # we want to translate, but rather a programmatic string
-              !str.include?('-') &&
-              !str.include?('_') &&
-              !str.include?('/')
+            str != component_name
           end
         end
 
