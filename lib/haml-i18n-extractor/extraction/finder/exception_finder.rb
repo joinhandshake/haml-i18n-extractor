@@ -204,10 +204,12 @@ module Haml
               # Try and exclude data-bind values as well as possible
               !str.include?("$data") &&
               !str.include?("$parent") &&
-              # looking for programmatic strings like 'class-name' or 'partial/render'. we do not rule out
-              # strings with 'under_score' since those are common in interpolation in ruby code variable refs.
-              !str.match(/\b[a-z]+-[a-z]+\b/) &&
-              !str.match(/\b[a-z]+\/[a-z]+\b/) &&
+              # looking for a string which is only CSS classes such as 'foo bar-biz can'
+              !str.match(/^[a-z -]+-[a-z]+$/) &&
+              # looking for an id such as 'an_id_match'
+              !str.match(/^[a-z]+_[a-z_]+$/) &&
+              # looking for a partial render such as 'my/partial/path'
+              !str.match(/^[a-z]+\/[a-z\/]+$/) &&
               # these will match knockout.js bindings FIXME: too broad, is this needed
               # anymore with filter_out_data_bind_values?
               # !str.match(/\b[a-z]:\s?/) &&
