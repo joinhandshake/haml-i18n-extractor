@@ -131,6 +131,10 @@ module Haml
 
         def script(line)
           txt = line[:value][:text]
+
+          # Comments with interpolation are considered scripts
+          return nil if html_comment?(txt)
+
           if ExceptionFinder.could_match?(txt)
             match = ExceptionFinder.new(txt).find
             if (match.is_a?(Array))
