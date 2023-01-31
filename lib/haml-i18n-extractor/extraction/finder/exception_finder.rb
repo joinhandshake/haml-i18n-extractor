@@ -132,9 +132,9 @@ module Haml
               !str.include?("$data") &&
               !str.include?("$parent") &&
               # looking for programmatic strings like 'class-name' or 'id_name' or 'partial/render'
-              !str.match(/[a-z]*-[a-z]*/) &&
-              !str.match(/[a-z]*_[a-z]*/) &&
-              !str.match(/[a-z]*\/[a-z]*/) &&
+              !str.match(/\b[a-z]+-[a-z]+\b/) &&
+              !str.match(/\b[a-z]+_[a-z]+\b/) &&
+              !str.match(/\b[a-z]+\/[a-z]+\b/) &&
               # these will match knockout.js bindings FIXME: too broad, is this needed
               # anymore with filter_out_data_bind_values?
               # !str.match(/\b[a-z]:\s?/) &&
