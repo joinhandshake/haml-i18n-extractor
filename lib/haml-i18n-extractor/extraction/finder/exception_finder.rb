@@ -205,7 +205,7 @@ module Haml
               !str.include?("$data") &&
               !str.include?("$parent") &&
               # looking for a string which is only CSS classes such as 'foo bar-biz can'
-              !str.match(/^[a-z0-9 -]+-[a-z0-9]+$/) &&
+              !(str.include?('-') && str.match(/^[a-z0-9 -]+$/)) &&
               # looking for an id such as 'an_id_match'
               !str.match(/^[a-z0-9]+_[a-z0-9_]+$/) &&
               # looking for a partial render such as 'my/partial/path'

@@ -36,7 +36,8 @@ module Haml
           return arr if str.nil? || str.empty? || !interpolated?(str)
           scanner = StringScanner.new(str)
           scanner.scan_until(/\#{.*?}/)
-          so_far = scanner.pre_match + scanner.matched
+          pre_match = scanner.pre_match.nil? ? "" : scanner.pre_match
+          so_far = pre_match + scanner.matched
           arr << extract_interpolation(so_far)
           arr = interpolations(arr, scanner.rest)
         end
