@@ -18,7 +18,7 @@ Gem::Specification.new do |gem|
   gem.version       = Haml::I18n::Extractor::VERSION
 
   gem.add_dependency "tilt"
-  gem.add_dependency "haml", "~> 5.1"
+  gem.add_dependency "haml", "~> 6"
   gem.add_dependency "activesupport"
   gem.add_dependency "highline"
   gem.add_dependency "trollop", "1.16.2"
